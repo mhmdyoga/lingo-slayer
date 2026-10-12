@@ -11,7 +11,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { Monster, StarIcon } from "./Monsters";
-import { Cloud, PencilHero, Rock, Sun, Tree } from "./Scenery";
+import { Cloud, PencilHero, Rock, Sun, PineTree } from "./Scenery";
 import { LEVELS, LEVEL_ORDER, type LevelId } from "@/lib/questions";
 import type { Progress } from "@/lib/storage";
 import { play } from "@/lib/sfx";
@@ -220,7 +220,7 @@ export default function WorldMap({
               <div key={i} className="absolute" style={{ left: d.x, top: d.y, width: d.s, transformStyle: "preserve-3d" }}>
                 <Stand>
                   {d.t === "tree" ? (
-                    <div style={{ width: d.s }}><Tree className="w-full" /></div>
+                    <div style={{ width: d.s }}><PineTree className="w-full" /></div>
                   ) : (
                     <div style={{ width: d.s }}><Rock className="w-full" /></div>
                   )}

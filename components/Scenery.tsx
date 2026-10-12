@@ -1,16 +1,67 @@
-const INK = "#111";
+import { useId } from "react";
 
-export function Tree({ className }: { className?: string }) {
+const INK = "#1b1b1b"; // atau pakai konstanta INK milikmu
+
+export function PineTree({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 90 120" className={className} aria-hidden overflow="visible">
+      {/* bayangan tanah */}
+      <ellipse cx="46" cy="117" rx="26" ry="3.5" fill="#000" opacity="0.18" />
+
       <g className="ink" stroke={INK} strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M40 116 L42 74 L52 74 L54 116 Z" fill="#fff" />
-        <path d="M44 100 l6 -8 M46 86 l4 -4" fill="none" strokeWidth={3} />
+        {/* batang */}
+        <path d="M39 117 L41 86 L51 86 L53 117 Z" fill="#8B5E34" />
+        <path d="M47 86 L51 86 L53 117 L47 117 Z" fill="#5E3C1E" stroke="none" />
+        <path d="M43 108 l0 -8 M44 96 l0 -6" fill="none" stroke="#3E2812" strokeWidth={2} />
+
+        {/* tingkat bawah */}
         <path
-          d="M14 66 C-2 56 6 34 22 36 C20 16 44 6 56 20 C72 10 90 28 78 44 C94 52 82 74 62 70 C50 80 28 80 14 66 Z"
-          fill="#fff"
+          d="M8 94 L45 50 L82 94 L68 89 L56 95 L45 89 L34 95 L22 89 Z"
+          fill="#2F8F4E"
         />
-        <path d="M30 50 q8 -8 16 0 M52 40 q6 -6 12 0 M38 64 q10 6 22 -2" fill="none" strokeWidth={3} />
+        <path
+          d="M45 50 L82 94 L68 89 L56 95 L45 89 Z"
+          fill="#1F6B3A"
+          stroke="none"
+        />
+
+        {/* tingkat tengah */}
+        <path
+          d="M14 72 L45 30 L76 72 L64 67 L54 73 L45 67 L36 73 L26 67 Z"
+          fill="#35A058"
+        />
+        <path
+          d="M45 30 L76 72 L64 67 L54 73 L45 67 Z"
+          fill="#237A42"
+          stroke="none"
+        />
+
+        {/* tingkat atas */}
+        <path
+          d="M24 52 L45 8 L66 52 L57 47 L45 53 L33 47 Z"
+          fill="#3CB063"
+        />
+        <path d="M45 8 L66 52 L57 47 L45 53 Z" fill="#2A8A4B" stroke="none" />
+
+        {/* highlight sisi kiri */}
+        <g fill="none" stroke="#7FD99A" strokeWidth={2.5}>
+          <path d="M42 16 L31 42" />
+          <path d="M40 38 L24 64" />
+          <path d="M40 60 L16 86" />
+        </g>
+
+        {/* detail ranting */}
+        <g fill="none" stroke="#17512C" strokeWidth={2}>
+          <path d="M36 80 q6 4 12 0" />
+          <path d="M54 82 q6 3 12 -1" />
+          <path d="M38 58 q6 3 10 0" />
+          <path d="M46 36 q4 3 8 0" />
+        </g>
+      </g>
+
+      {/* salju tipis di ujung (opsional, hapus kalau tidak perlu) */}
+      <g fill="#fff" stroke={INK} strokeWidth={2}>
+        <path d="M40 20 L45 8 L50 20 L47 18 L45 21 L43 18 Z" />
       </g>
     </svg>
   );
@@ -19,10 +70,86 @@ export function Tree({ className }: { className?: string }) {
 export function Rock({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 80 50" className={className} aria-hidden overflow="visible">
-      <g className="ink" stroke={INK} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round">
-        <path d="M6 46 C0 30 14 12 34 10 C54 6 76 22 74 46 Z" fill="#fff" />
-        <path d="M24 30 l10 4 M46 22 l8 6" fill="none" strokeWidth={3} />
+      {/* bayangan tanah */}
+      <ellipse cx="42" cy="48.5" rx="38" ry="3" fill="#000" opacity="0.18" />
+
+      {/* serpihan di tanah */}
+      <g stroke={INK} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round">
+        <path d="M-12 47 L-9 38 L-1 41 L-2 47 Z" fill="#8E8E9C" />
+        <path d="M-9 38 L-1 41 L-2 47 L-6 47 Z" fill="#6E6E7C" stroke="none" />
+        <path d="M80 47 L83 38 L91 42 L89 47 Z" fill="#8E8E9C" />
+        <path d="M83 38 L91 42 L89 47 L85 47 Z" fill="#6E6E7C" stroke="none" />
       </g>
+
+      {/* serpihan melayang */}
+      <g stroke={INK} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round">
+        <path d="M66 8 L75 2 L79 10 L70 13 Z" fill="#B9B9C6" />
+        <path d="M75 2 L79 10 L70 13 Z" fill="#8E8E9C" stroke="none" />
+        <path d="M4 7 L11 2 L14 9 L7 12 Z" fill="#C4C4D0" />
+        <path d="M11 2 L14 9 L7 12 Z" fill="#9A9AA8" stroke="none" />
+        <path d="M82 22 L86 19 L88 24 L84 26 Z" fill="#A5A5B2" />
+      </g>
+
+      {/* batu utama: bidang-bidang pecahan */}
+      <g strokeLinejoin="round" strokeLinecap="round">
+        {/* kiri-atas (terang) */}
+        <path d="M4 32 L14 18 L22 30 Z" fill="#A8A8B6" />
+        <path d="M14 18 L24 12 L38 22 L22 30 Z" fill="#C2C2CE" />
+        <path d="M24 12 L36 6 L38 22 Z" fill="#E0E0EA" />
+        <path d="M36 6 L50 10 L38 22 Z" fill="#CFCFDA" />
+        {/* tengah */}
+        <path d="M50 10 L62 16 L56 28 L38 22 Z" fill="#A0A0AE" />
+        <path d="M22 30 L38 22 L56 28 L40 46 Z" fill="#8C8C9A" />
+        <path d="M6 46 L4 32 L22 30 L40 46 Z" fill="#7A7A89" />
+        {/* kanan-bawah (gelap) */}
+        <path d="M62 16 L72 28 L56 28 Z" fill="#82828F" />
+        <path d="M56 28 L60 46 L40 46 Z" fill="#666674" />
+        <path d="M72 28 L76 46 L60 46 L56 28 Z" fill="#555563" />
+      </g>
+
+      {/* garis antar-bidang */}
+      <g fill="none" stroke="#3E3E4B" strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round">
+        <path d="M4 32 L22 30 L14 18" />
+        <path d="M24 12 L38 22 L22 30" />
+        <path d="M36 6 L38 22 L50 10" />
+        <path d="M38 22 L56 28 L62 16" />
+        <path d="M22 30 L40 46" />
+        <path d="M56 28 L40 46" />
+        <path d="M56 28 L60 46" />
+        <path d="M56 28 L72 28" />
+      </g>
+
+      {/* sorot tepi terang */}
+      <g fill="none" stroke="#F4F4FA" strokeWidth={1.6} strokeLinecap="round" opacity="0.85">
+        <path d="M16 18 L24 14" />
+        <path d="M26 11 L35 8" />
+        <path d="M38 8 L47 11" />
+      </g>
+
+      {/* retakan */}
+      <g fill="none" stroke={INK} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M46 26 l-3 5 l4 3 l-2 6" />
+        <path d="M12 38 l5 -2 l2 4" />
+      </g>
+
+      {/* pecahan kecil menempel di tepi */}
+      <path
+        d="M72 28 L78 33 L76 40 L74 34 Z"
+        fill="#6A6A78"
+        stroke={INK}
+        strokeWidth={2.5}
+        strokeLinejoin="round"
+      />
+
+      {/* outline luar tebal (siluet bersudut) */}
+      <path
+        d="M6 46 L4 32 L14 18 L24 12 L36 6 L50 10 L62 16 L72 28 L76 46 Z"
+        fill="none"
+        stroke={INK}
+        strokeWidth={4.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

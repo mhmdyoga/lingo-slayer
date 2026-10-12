@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Knight, KnightPart, Rock, Tree, type KnightPartName } from "../Scenery";
+import { Knight, KnightPart, Rock, PineTree, type KnightPartName } from "../Scenery";
 import type { Sprites } from "./engine";
 import { MONSTER_IDS } from "@/lib/bestiary";
 
@@ -64,7 +64,7 @@ export function useSprites(): { host: React.ReactNode; sprites: Sprites | null }
   const host = (
     <div ref={ref} style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", visibility: "hidden" }} aria-hidden>
       <div data-sprite="tree">
-        <Tree />
+        <PineTree />
       </div>
       <div data-sprite="rock">
         <Rock />
