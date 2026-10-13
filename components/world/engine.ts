@@ -31,8 +31,22 @@ const MARKER = "#ffe14d";
 // ---- semi-3D: kamera miring + perspektif kedalaman ----
 const TILT = 0.74; // pemendekan sumbu y (lantai terlihat miring)
 const DEPTH_K = 0.00062; // makin jauh (atas layar) makin kecil
+const QUEST_CHANCE = 0.3; // peluang quest muncul setelah monster biasa dikalahkan
+const QUEST_PITY = 4; // setelah sekian kali berturut-turut tanpa quest, kill berikutnya pasti quest
 const MDEF = BESTIARY;
 const DYING = 1.1; // detik: jatuh -> tergeletak -> memudar
+
+// path ikon lucide "swords" (viewBox 24x24)
+const SWORDS_D = [
+  "m13 19 6-6",
+  "M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5",
+  "m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586",
+  "m16 16 4 4",
+  "m19 21 2-2",
+  "m5 14 4 4",
+  "m5 21-2-2",
+  "M7.5 16.5 4 20",
+];
 
 type Obstacle = {
   type: "tree" | "rock" | "pond";
@@ -69,7 +83,7 @@ type Monster = {
   phase: number;
 };
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; kind: "puff" | "star" | "dust"; size: number; col?: string };
-type FloatText = { x: number; y: number; text: string; life: number; color: string };
+type FloatText = { x: number; y: number; text: string; life: number; color: string, icon?: "swords" };
 
 function mulberry32(seed: number) {
   return () => {
@@ -477,6 +491,14 @@ export class Engine {
       const m = this.monsters[i];
       if (m.dying !== 0 && m.dying <= 0 && !this.paused) {
         this.monsters.splice(i, 1);
+        // tidak setiap monster memberi quest: bos selalu, sisanya acak (maks. 2 kali beruntun tanpa quest)
+        const hasQuest = MDEF[m.kind].boss || this.dry >= QUEST_PITY || Math.random() < QUEST_CHANCE;
+        if (!hasQuest) {
+          this.dry++;
+          this.texts.push({ x: m.x, y: m.y - 70, text: "Menang!", life: 1.1, color: "#1a9d4f", icon: "swords"});
+          continue;
+        }
+        this.dry = 0;
         this.paused = true;
         this.clearInput();
         this.cb.onKill(m.kind);
@@ -629,6 +651,7 @@ export class Engine {
     fn();
     c.restore();
   }
+  private dry = 0; // jumlah kill beruntun tanpa quest
   private flash?: HTMLCanvasElement;
   private img(name: string) {
     return this.sprites[name];
@@ -766,22 +789,35 @@ export class Engine {
       c.globalAlpha = 1;
       c.restore();
     }
-    for (const t of this.texts) {
-      const tq = this.proj(t.x, t.y);
-      c.save();
-      c.translate(tq.x - t.x * tq.s, tq.y - t.y * tq.s);
-      c.scale(tq.s, tq.s);
-      c.globalAlpha = Math.min(1, t.life * 2);
-      c.font = "28px 'Bagel Fat One', sans-serif";
-      c.textAlign = "center";
-      c.lineWidth = 6;
-      c.strokeStyle = "#fff";
-      c.strokeText(t.text, t.x, t.y);
-      c.fillStyle = t.color;
-      c.fillText(t.text, t.x, t.y);
-      c.globalAlpha = 1;
-      c.restore();
-    }
+  for (const t of this.texts) {
+  const tq = this.proj(t.x, t.y);
+  c.save();
+  c.translate(tq.x - t.x * tq.s, tq.y - t.y * tq.s);
+  c.scale(tq.s, tq.s);
+  c.globalAlpha = Math.min(1, t.life * 2);
+  c.font = "28px 'Bagel Fat One', sans-serif";
+  c.lineWidth = 6;
+  c.strokeStyle = "#fff";
+  c.lineJoin = "round";
+  if (t.icon) {
+    // icon di kiri, teks di sampingnya, keduanya dipusatkan di (t.x, t.y)
+    const isz = 34, gap = 8;
+    const tw = c.measureText(t.text).width;
+    const left = t.x - (isz + gap + tw) / 2;
+    this.drawSwordsIcon(left, t.y - 30, isz, t.color);
+    c.textAlign = "left";
+    c.strokeText(t.text, left + isz + gap, t.y);
+    c.fillStyle = t.color;
+    c.fillText(t.text, left + isz + gap, t.y);
+  } else {
+    c.textAlign = "center";
+    c.strokeText(t.text, t.x, t.y);
+    c.fillStyle = t.color;
+    c.fillText(t.text, t.x, t.y);
+  }
+  c.globalAlpha = 1;
+  c.restore();
+}
 
     // ---- overlay layar ----
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -1212,4 +1248,24 @@ export class Engine {
     c.stroke();
     c.restore();
   }
+
+private swordsPaths?: Path2D[];
+private drawSwordsIcon(x: number, y: number, size: number, color: string) {
+  const c = this.ctx;
+  // dibuat lazy supaya aman saat SSR (Path2D hanya ada di browser)
+  const paths = (this.swordsPaths ??= SWORDS_D.map((d) => new Path2D(d)));
+  c.save();
+  c.translate(x, y);
+  c.scale(size / 24, size / 24);
+  c.lineCap = "round";
+  c.lineJoin = "round";
+  // lapis putih di bawah, supaya terbaca di atas dunia (sama seperti teks)
+  c.strokeStyle = "#fff";
+  c.lineWidth = 5.5;
+  for (const p of paths) c.stroke(p);
+  c.strokeStyle = color;
+  c.lineWidth = 2.6;
+  for (const p of paths) c.stroke(p);
+  c.restore();
+}
 }

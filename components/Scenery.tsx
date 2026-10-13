@@ -68,82 +68,92 @@ export function PineTree({ className }: { className?: string }) {
 }
 
 export function Rock({ className }: { className?: string }) {
+  const clipId = "rock-clip-" + useId().replace(/:/g, "");
+
+  const body = "M6 46 C0 30 14 12 34 10 C54 6 76 22 74 46 Z";
+
   return (
     <svg viewBox="0 0 80 50" className={className} aria-hidden overflow="visible">
+      <defs>
+        <clipPath id={clipId}>
+          <path d={body} />
+        </clipPath>
+      </defs>
+
       {/* bayangan tanah */}
-      <ellipse cx="42" cy="48.5" rx="38" ry="3" fill="#000" opacity="0.18" />
+      <ellipse cx="42" cy="48" rx="36" ry="3.2" fill="#000" opacity="0.18" />
 
-      {/* serpihan di tanah */}
-      <g stroke={INK} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round">
-        <path d="M-12 47 L-9 38 L-1 41 L-2 47 Z" fill="#8E8E9C" />
-        <path d="M-9 38 L-1 41 L-2 47 L-6 47 Z" fill="#6E6E7C" stroke="none" />
-        <path d="M80 47 L83 38 L91 42 L89 47 Z" fill="#8E8E9C" />
-        <path d="M83 38 L91 42 L89 47 L85 47 Z" fill="#6E6E7C" stroke="none" />
+      {/* kerikil kecil */}
+      <g stroke={INK} strokeWidth={2.5} strokeLinejoin="round">
+        <path d="M76 47 C76 42 84 41 87 45 C88 47 88 48 88 48 L76 48 Z" fill="#A9A9B3" />
+        <path d="M-6 48 C-6 44 -1 43 2 45 C4 46 4 48 4 48 Z" fill="#9A9AA4" />
       </g>
 
-      {/* serpihan melayang */}
-      <g stroke={INK} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round">
-        <path d="M66 8 L75 2 L79 10 L70 13 Z" fill="#B9B9C6" />
-        <path d="M75 2 L79 10 L70 13 Z" fill="#8E8E9C" stroke="none" />
-        <path d="M4 7 L11 2 L14 9 L7 12 Z" fill="#C4C4D0" />
-        <path d="M11 2 L14 9 L7 12 Z" fill="#9A9AA8" stroke="none" />
-        <path d="M82 22 L86 19 L88 24 L84 26 Z" fill="#A5A5B2" />
-      </g>
-
-      {/* batu utama: bidang-bidang pecahan */}
-      <g strokeLinejoin="round" strokeLinecap="round">
-        {/* kiri-atas (terang) */}
-        <path d="M4 32 L14 18 L22 30 Z" fill="#A8A8B6" />
-        <path d="M14 18 L24 12 L38 22 L22 30 Z" fill="#C2C2CE" />
-        <path d="M24 12 L36 6 L38 22 Z" fill="#E0E0EA" />
-        <path d="M36 6 L50 10 L38 22 Z" fill="#CFCFDA" />
-        {/* tengah */}
-        <path d="M50 10 L62 16 L56 28 L38 22 Z" fill="#A0A0AE" />
-        <path d="M22 30 L38 22 L56 28 L40 46 Z" fill="#8C8C9A" />
-        <path d="M6 46 L4 32 L22 30 L40 46 Z" fill="#7A7A89" />
-        {/* kanan-bawah (gelap) */}
-        <path d="M62 16 L72 28 L56 28 Z" fill="#82828F" />
-        <path d="M56 28 L60 46 L40 46 Z" fill="#666674" />
-        <path d="M72 28 L76 46 L60 46 L56 28 Z" fill="#555563" />
-      </g>
-
-      {/* garis antar-bidang */}
-      <g fill="none" stroke="#3E3E4B" strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round">
-        <path d="M4 32 L22 30 L14 18" />
-        <path d="M24 12 L38 22 L22 30" />
-        <path d="M36 6 L38 22 L50 10" />
-        <path d="M38 22 L56 28 L62 16" />
-        <path d="M22 30 L40 46" />
-        <path d="M56 28 L40 46" />
-        <path d="M56 28 L60 46" />
-        <path d="M56 28 L72 28" />
-      </g>
-
-      {/* sorot tepi terang */}
-      <g fill="none" stroke="#F4F4FA" strokeWidth={1.6} strokeLinecap="round" opacity="0.85">
-        <path d="M16 18 L24 14" />
-        <path d="M26 11 L35 8" />
-        <path d="M38 8 L47 11" />
-      </g>
-
-      {/* retakan */}
-      <g fill="none" stroke={INK} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M46 26 l-3 5 l4 3 l-2 6" />
-        <path d="M12 38 l5 -2 l2 4" />
-      </g>
-
-      {/* pecahan kecil menempel di tepi */}
+      {/* batu utama: dasar + outline */}
       <path
-        d="M72 28 L78 33 L76 40 L74 34 Z"
-        fill="#6A6A78"
+        d={body}
+        fill="#9C9CA8"
         stroke={INK}
-        strokeWidth={2.5}
+        strokeWidth={4.5}
         strokeLinejoin="round"
+        strokeLinecap="round"
       />
 
-      {/* outline luar tebal (siluet bersudut) */}
+      {/* shading, facet, tekstur (dipotong mengikuti bentuk batu) */}
+      <g clipPath={`url(#${clipId})`}>
+        {/* sisi gelap bawah & kanan */}
+        <ellipse cx="46" cy="52" rx="48" ry="14" fill="#6E6E7C" />
+        <path d="M50 8 C68 14 78 28 76 48 L56 48 C60 34 58 20 50 8 Z" fill="#7F7F8E" />
+
+        {/* highlight kiri atas */}
+        <ellipse cx="26" cy="20" rx="16" ry="8" fill="#C9C9D4" />
+        <ellipse cx="22" cy="18" rx="8" ry="4" fill="#E2E2EA" />
+
+        {/* facet / bidang pecahan */}
+        <path d="M14 40 L26 26 L40 30 L36 46 Z" fill="#8A8A98" />
+        <path d="M40 30 L52 24 L58 36 L50 46 L36 46 Z" fill="#767684" />
+        <path d="M26 26 L34 14 L48 12 L40 30 Z" fill="#B4B4C0" />
+
+        {/* garis facet */}
+        <g fill="none" stroke="#4B4B58" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 40 L26 26 L34 14" />
+          <path d="M26 26 L40 30 L52 24" />
+          <path d="M40 30 L36 46" />
+          <path d="M52 24 L58 36 L50 46" />
+        </g>
+
+        {/* retakan */}
+        <g fill="none" stroke={INK} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M58 36 l-4 4 l3 4 l-3 4" />
+          <path d="M18 34 l5 2 l-1 5" />
+        </g>
+
+        {/* lumut di bagian atas */}
+        <path
+          d="M30 12 C36 8 44 8 50 11 C52 14 48 16 46 15 C44 18 40 17 38 15 C35 17 31 16 30 12 Z"
+          fill="#6DB34F"
+        />
+        <path d="M34 11 C38 9 44 9 47 11 C44 12 38 12 34 11 Z" fill="#9AD66F" />
+
+        {/* bintik pori / granit */}
+        <g fill="#4B4B58" opacity="0.65">
+          <circle cx="30" cy="38" r="0.9" />
+          <circle cx="44" cy="38" r="1" />
+          <circle cx="62" cy="30" r="0.9" />
+          <circle cx="20" cy="44" r="0.8" />
+          <circle cx="52" cy="42" r="0.9" />
+          <circle cx="66" cy="40" r="0.8" />
+        </g>
+        <g fill="#E8E8F0" opacity="0.7">
+          <circle cx="28" cy="22" r="0.8" />
+          <circle cx="38" cy="18" r="0.7" />
+          <circle cx="16" cy="32" r="0.7" />
+        </g>
+      </g>
+
+      {/* outline diulang di atas supaya tetap tegas */}
       <path
-        d="M6 46 L4 32 L14 18 L24 12 L36 6 L50 10 L62 16 L72 28 L76 46 Z"
+        d={body}
         fill="none"
         stroke={INK}
         strokeWidth={4.5}

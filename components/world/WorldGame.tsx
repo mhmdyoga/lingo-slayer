@@ -296,7 +296,7 @@ export default function WorldGame() {
                 <ul className="mt-3 space-y-1 text-xl">
                   <li>🗺️ Jelajahi dunia luas, cari monster (ikuti panah &amp; peta mini).</li>
                   <li>⚔️ Tebas monster dengan pedangmu. Jangan sampai disentuh!</li>
-                  <li>📝 Monster kalah = quest bahasa Inggris. Jawab benar untuk XP.</li>
+                  <li>📝 Kadang monster yang kalah menjatuhkan quest bahasa Inggris. Jawab benar untuk XP!</li>
                   <li>💔 Salah jawab atau kena monster, nyawa berkurang.</li>
                 </ul>
                 <p className="mt-2 text-lg text-ink/70">

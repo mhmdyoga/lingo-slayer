@@ -11,14 +11,13 @@ import { LEVELS, LEVEL_ORDER } from "@/lib/questions";
 import RotatingText from "./fragments/rotatingText";
 import {Modak} from "next/font/google"
 
-
-
-gsap.registerPlugin(ScrollTrigger);
- const Modaks = Modak({
+const Modaks = Modak({
   variable: "--font-modak",
   subsets: ["latin"],
   weight: ["400"],
 });
+
+gsap.registerPlugin(ScrollTrigger);
 
 const CROWD: { kind: MonsterKind; left: number; size: number; rot: number; flip: boolean; layer: 0 | 1 }[] = [
   { kind: "wispal", left: -4, size: 21, rot: -8, flip: false, layer: 0 },
@@ -157,15 +156,15 @@ export default function Landing() {
     <div ref={root}>
       {/* HERO */}
       <header className="hero relative flex min-h-svh flex-col items-center overflow-hidden border-t-2 border-ink">
-         <div className="top-0 md:top-12 lg:top-2 absolute left-1/2 grid -translate-x-1/2 content-start justify-items-center gap-6 text-center text-black">
+        <div className="top-22 md:top-12 lg:top-2 absolute left-1/2 grid -translate-x-1/2 content-start justify-items-center gap-6 text-center text-black">
             <span className="relative max-w-[12ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-gradient-to-b after:from-white after:to-black after:content-['']">
               Hello
             </span>
-          </div>
+        </div>
 
-        <h1 className={`font-extrabold mt-40 text-3xl md:text-5xl lg:text-9xl text-black text-center ${Modaks.className}`}>
+        <h1 className={`relative z-10 md:mt-16 mt-4 px-4 text-center font-display text-[clamp(2.6rem,10.5vw,9.5rem)] leading-[0.95] tracking-tight ${Modaks.className}`}>
           <span className="block">{split("LET'S BEAT")}</span>
-         <RotatingText
+          <RotatingText
               texts={["MONSTERS", "SPELLING", "ENGLISH", "BOREDOM"]}
               mainClassName="px-2 sm:px-2 md:px-3 bg-marker text-black overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg"
               staggerFrom="last"
@@ -183,8 +182,8 @@ export default function Landing() {
         </h1>
 
         <div className="relative z-20 mt-4 flex flex-col items-center gap-5 px-4 text-center">
-          <p className="hero-fade max-w-xl text-sm text-black bg-marker rounded-full p-4 md:text-2xl">
-           Game petualangan ksatria untuk anak SD. Jelajahi dunia, tebas monster, lalu taklukkan quest bahasa Inggris!
+          <p className="hero-fade max-w-xl text-xl text-ink/80 md:text-2xl bg-marker rounded-full">
+            Petualangan sang ksatria. Jelajahi dunia, tebas monster, lalu taklukkan quest bahasa Inggris!
           </p>
           <div className="hero-fade flex flex-wrap justify-center gap-4">
             <Link href="/play" className="doodle-btn px-8 py-4 text-2xl md:text-3xl">
@@ -249,7 +248,7 @@ export default function Landing() {
 
       {/* CARA MAIN */}
       <section id="cara-main" className="mx-auto max-w-6xl px-5 py-24">
-        <h2 data-reveal className="font-display text-5xl md:text-7xl">
+        <h2 data-reveal className={`${Modaks.className} font-display text-5xl md:text-7xl`}>
           CARA <span className="bg-marker px-2">MAINNYA</span>
         </h2>
         <p data-reveal className="mt-3 max-w-xl text-xl text-ink/70">
@@ -277,7 +276,7 @@ export default function Landing() {
       {/* MONSTER */}
       <section className="border-y-4 border-ink bg-white py-24">
         <div className="mx-auto max-w-6xl px-5">
-          <h2 data-reveal className="font-display text-5xl md:text-7xl">
+          <h2 data-reveal className={`${Modaks.className} font-display text-5xl md:text-7xl`}>
             KENALAN SAMA <span className="bg-marker px-2">MONSTERNYA</span>
           </h2>
           <div className="mt-14 grid gap-10 md:grid-cols-3">
@@ -308,7 +307,7 @@ export default function Landing() {
 
       {/* TOPIK + CTA */}
       <section className="mx-auto max-w-4xl px-5 py-24 text-center">
-        <h2 data-reveal className="font-display text-4xl md:text-6xl">KATA APA YANG DIPELAJARI?</h2>
+        <h2 data-reveal className={`ont-display text-4xl md:text-6xl ${Modaks.className}`}>KATA APA YANG DIPELAJARI?</h2>
         <div data-reveal className="mt-8 flex flex-wrap justify-center gap-4 text-xl">
           {["🐶 Hewan", "🍎 Buah & makanan", "🎒 Benda sekolah", "👃 Anggota tubuh", "👩 Keluarga"].map((t) => (
             <span key={t} className="doodle-box px-5 py-2">
@@ -325,7 +324,7 @@ export default function Landing() {
 
       <footer className="border-t-4 border-ink bg-ink px-5 py-8 text-center text-paper">
         <p className="font-display text-2xl">Blejar English!</p>
-        <p className="mt-1 text-base opacity-70">Belajar bahasa Inggris sambil main dan Seru seruan.</p>
+        <p className="mt-1 text-base opacity-70">Belajar bahasa Inggris sambil main. Dibuat dengan Next.js, GSAP, Framer Motion &amp; Lenis.</p>
       </footer>
     </div>
   );
