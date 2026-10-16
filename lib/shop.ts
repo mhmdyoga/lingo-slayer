@@ -23,7 +23,7 @@ export const SKIN: Skin[] = [
     name: "Zirah Naga Api ( Exclusive )",
     price: 60,
     pal: {
-      light: "#3c3f49",
+      light: "#c2272c",
       mid: "#2c2e36",
       body: "#4a4d59",
       dark: "#24262d",
@@ -50,19 +50,6 @@ export const SKIN: Skin[] = [
       shoulder: "#e6edf7",
       helm: "#e9eff8",
       deco: "ice",
-    },
-  },
-  {
-    id: "merah",
-    name: "Zirah Naga Api",
-    price: 12,
-    pal: {
-      light: "#ff8a80",
-      mid: "#e0524a",
-      body: "#ffb3ab",
-      dark: "#8c2a25",
-      plume: "#111",
-      plume2: "#ff5a4d",
     },
   },
   {
