@@ -2,6 +2,8 @@
 import { play } from "@/lib/sfx";
 
 import { BESTIARY, type MKind } from "@/lib/bestiary";
+import { coinDrop, getSword } from "@/lib/shop";
+import { Sword } from "@/types/knight/knight";
 export type { MKind };
 export type Stats = {
   hp: number;
@@ -20,6 +22,7 @@ export type Callbacks = {
   onHurt: () => void;
   onLevelUp: (level: number) => void;
   onGameOver: (s: Stats) => void;
+  onCoin?: (n: number)  => void 
 };
 
 export const WORLD_W = 3600;
@@ -126,6 +129,7 @@ export class Engine {
 
   p = { x: WORLD_W / 2, y: WORLD_H / 2, fx: 0, fy: 1, walk: 0, inv: 0, kx: 0, ky: 0, swing: -1, cd: 0, hitDone: false, moving: false, vx: 0, vy: 0, sx: 1, side: 1, dust: 0, speed: 0 };
   stats: Stats = { hp: 5, maxHp: 5, level: 1, xp: 0, xpNext: 40, kills: 0, score: 0, streak: 0 };
+  look = {skin: "besi", sword: "besi"}
   paused = true; // jeda karena quest / intro
   suspended = false; // jeda manual / tab tersembunyi
   over = false;
@@ -551,6 +555,9 @@ export class Engine {
         m.ky *= 0.6;
         this.stats.kills++;
         this.addXp(d.xp);
+        const coins = coinDrop(!!d.boss)
+        this.cb.onCoin?.(coins)
+         this.texts.push({ x: m.x, y: m.y - d.w * 1.3, text: `+${coins} 🪙`, life: 1.1, color: "#b8860b" });
         this.burst(m.x, m.y - 30, 14, "puff", d.color);
         if (!this.muted) play("kill");
       } else if (!this.muted) play("hit");
@@ -1026,7 +1033,7 @@ export class Engine {
     const c = this.ctx;
     const p = this.p;
     const S = this.sprites;
-    if (!S["k-body"]) return;
+    if (!S[`k-body-${this.look.skin}`]) return;
     const sc = 134 / 190; // tinggi ksatria ~134px
     const horiz = Math.min(1, Math.abs(p.vx) / 200);
     const vert = Math.min(1, Math.abs(p.vy) / 200);
@@ -1054,12 +1061,13 @@ export class Engine {
     c.scale(sc * p.sx, sc);
     c.translate(-60, -184);
 
+     const sk = this.look.skin
     const put = (name: string, px: number, py: number, ang: number, oy = 0) => {
       c.save();
       c.translate(px, py + oy);
       c.rotate(ang);
       c.translate(-px, -py);
-      c.drawImage(S[name], -10, -10, 140, 210);
+      c.drawImage(S[`${name}-${sk}`], -10, -10, 140, 210);
       c.restore();
     };
 
@@ -1074,7 +1082,7 @@ export class Engine {
     c.rotate(lean);
     c.scale(1, squashY);
     c.translate(-60, -126 + bob);
-    c.drawImage(S["k-body"], -10, -10, 140, 210);
+    c.drawImage(S[`k-body-${this.look.skin}`], -10, -10, 140, 210);
 
     const armL = -sn * 0.55 * moving + idle * 0.05 * (1 - moving) + (t >= 0 ? -0.6 * wind + 0.9 * strike : 0);
     put("k-armL", 28, 86, armL);
@@ -1085,7 +1093,7 @@ export class Engine {
     c.translate(92, 86);
     c.rotate(armR);
     c.translate(-92, -86);
-    c.drawImage(S["k-armR"], -10, -10, 140, 210);
+    c.drawImage(S[`k-armR-${this.look.skin}`], -10, -10, 140, 210);
     if (t < 0) {
       // pedang tergenggam di tangan kanan saat tidak menyerang
       c.translate(98, 132);
@@ -1122,7 +1130,12 @@ export class Engine {
     c.restore();
   }
 
-  private blade(x: number, y: number, a: number, len: number) {
+  private blade(x: number, y: number, a: number, base: number) {
+    const sw: Sword = getSword(this.look.sword)
+    const len = base + (sw.len - 24)
+    if (sw.fx === "ice") return this.iceBlade(x, y, a, len);
+    if(sw.fx === "fire") return this.fireBlade(x, y, a, len)
+    if(sw.fx === "royal") return this.royalBlade(x, y, a, len)
     const c = this.ctx;
     const dx = Math.cos(a), dy = Math.sin(a);
     const nx = -dy, ny = dx;
@@ -1133,7 +1146,7 @@ export class Engine {
     c.moveTo(x - dx * 14, y - dy * 14);
     c.lineTo(x, y);
     c.stroke();
-    c.strokeStyle = "#8a5a2b";
+    c.strokeStyle = `${sw.grip}`;
     c.lineWidth = 6;
     c.stroke();
     // bilah
@@ -1144,7 +1157,7 @@ export class Engine {
     c.lineTo(x + dx * len - nx * 5, y + dy * len - ny * 5);
     c.lineTo(x - nx * 7, y - ny * 7);
     c.closePath();
-    c.fillStyle = "#e6ecf1";
+    c.fillStyle = `${sw.blade}`;
     c.strokeStyle = INK;
     c.lineWidth = 4;
     c.fill();
@@ -1155,6 +1168,7 @@ export class Engine {
     c.strokeStyle = "#fff";
     c.lineWidth = 2.5;
     c.stroke();
+    this.bladeFx(x, y, dx, dy, nx, ny, len, sw)
     // pelindung
     c.beginPath();
     c.moveTo(x + nx * 16, y + ny * 16);
@@ -1162,7 +1176,7 @@ export class Engine {
     c.strokeStyle = INK;
     c.lineWidth = 11;
     c.stroke();
-    c.strokeStyle = MARKER;
+    c.strokeStyle = `${sw.guard}`;
     c.lineWidth = 5;
     c.stroke();
   }
@@ -1268,4 +1282,496 @@ private drawSwordsIcon(x: number, y: number, size: number, color: string) {
   for (const p of paths) c.stroke(p);
   c.restore();
 }
+
+  /** Pedang Es: bilah kristal bergerigi, berlian di tengah, pelindung bersayap. */
+  private iceBlade(x: number, y: number, a: number, len: number) {
+    const c = this.ctx;
+    const dx = Math.cos(a), dy = Math.sin(a);
+    const nx = -dy, ny = dx;
+    // u = sepanjang bilah, v = ke samping
+    const P = (u: number, v: number): [number, number] => [x + dx * u + nx * v, y + dy * u + ny * v];
+    const L = len;
+    const poly = (pts: [number, number][], fill: string, stroke?: string, lw = 3) => {
+      c.beginPath();
+      pts.forEach(([u, v], i) => (i ? c.lineTo(...P(u, v)) : c.moveTo(...P(u, v))));
+      c.closePath();
+      c.fillStyle = fill;
+      c.fill();
+      if (stroke) {
+        c.strokeStyle = stroke;
+        c.lineWidth = lw;
+        c.stroke();
+      }
+    };
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+
+    // gagang gelap + cincin
+    c.strokeStyle = INK;
+    c.lineWidth = 12;
+    c.beginPath();
+    c.moveTo(...P(-20, 0));
+    c.lineTo(...P(0, 0));
+    c.stroke();
+    c.strokeStyle = "#1f4e6b";
+    c.lineWidth = 6.5;
+    c.stroke();
+    c.strokeStyle = "#4ab3e8";
+    c.lineWidth = 2;
+    for (const u of [-6, -12]) {
+      c.beginPath();
+      c.moveTo(...P(u, -3));
+      c.lineTo(...P(u, 3));
+      c.stroke();
+    }
+    // ujung gagang: kristal kecil
+    poly([[-19, 0], [-25, -5], [-31, 0], [-25, 5]], "#bdeeff", INK, 2.5);
+
+    // sisi kiri (+v) dan kanan (-v) bilah: titik-titik gerigi kristal
+    const up: [number, number][] = [[0, 8], [0.1 * L, 12], [0.16 * L, 21], [0.23 * L, 14], [0.33 * L, 23], [0.42 * L, 15], [0.54 * L, 19], [0.62 * L, 11], [0.74 * L, 13], [0.84 * L, 7]];
+    const dn: [number, number][] = [[0, -8], [0.08 * L, -12], [0.15 * L, -17], [0.27 * L, -13], [0.37 * L, -21], [0.47 * L, -13], [0.59 * L, -16], [0.69 * L, -9], [0.8 * L, -9], [0.9 * L, -4]];
+    const tip: [number, number] = [L + 18, -3];
+    // dua belahan dengan warna beda (terang / gelap) -> kesan faset
+    poly([[0, 0], ...up, tip], "#c9f0ff");
+    poly([[0, 0], ...dn, tip], "#4fbdf0");
+    // faset: segitiga gelap & terang dari punggung bilah ke ujung gerigi
+    const ridge = (t: number): [number, number] => [t * L, -3 * t];
+    const facet = (r: number, pt: [number, number], q: [number, number], col: string) => poly([ridge(r), pt, q], col);
+    facet(0.22, up[3], up[4], "#8fdcf8");
+    facet(0.4, up[5], up[6], "#8fdcf8");
+    facet(0.6, up[7], up[8], "#8fdcf8");
+    facet(0.2, dn[3], dn[4], "#2fa3dd");
+    facet(0.45, dn[5], dn[6], "#2fa3dd");
+    facet(0.7, dn[7], dn[8], "#2fa3dd");
+    // garis faset putih
+    c.strokeStyle = "#fff";
+    c.lineWidth = 2;
+    c.beginPath();
+    for (const [r, pt] of [[0.18, up[2]], [0.3, up[4]], [0.52, up[6]], [0.7, up[8]]] as [number, [number, number]][]) {
+      c.moveTo(...P(...ridge(r)));
+      c.lineTo(...P(...pt));
+    }
+    c.stroke();
+    // garis tengah
+    c.strokeStyle = "#e9fbff";
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.moveTo(...P(8, 0));
+    c.lineTo(...P(L - 4, -3));
+    c.stroke();
+    // kontur luar
+    c.strokeStyle = INK;
+    c.lineWidth = 3.5;
+    c.beginPath();
+    [[0, 8], ...up, tip, ...dn.slice().reverse(), [0, -8]].forEach(([u, v], i) => (i ? c.lineTo(...P(u, v)) : c.moveTo(...P(u, v))));
+    c.closePath();
+    c.stroke();
+
+    // berlian di tengah bilah
+    const du = 0.34 * L;
+    poly([[du - 9, 0], [du, 8], [du + 9, 0], [du, -8]], "#fff", INK, 2.5);
+    poly([[du - 4, 0], [du, 4], [du + 4, 0], [du, -4]], "#7fd3f2");
+
+    // pelindung bersayap kristal
+    for (const side of [1, -1]) {
+      poly([[3, side * 5], [-4, side * 12], [-10, side * 26], [3, side * 19], [12, side * 22], [9, side * 10]], "#9fe3ff", INK, 3);
+      poly([[3, side * 5], [-4, side * 12], [3, side * 19]], "#4fbdf0");
+    }
+    poly([[-6, 0], [0, 7], [6, 0], [0, -7]], "#1f4e6b", INK, 2.5);
+    poly([[-2, 0], [0, 3], [2, 0], [0, -3]], "#bdeeff");
+
+    // kilau berkedip
+    const k = Math.sin(this.time * 5);
+    if (k > 0.5) {
+      const [sx, sy] = P(0.55 * L, 6);
+      c.strokeStyle = "#fff";
+      c.lineWidth = 2.5;
+      c.beginPath();
+      c.moveTo(sx - 6, sy);
+      c.lineTo(sx + 6, sy);
+      c.moveTo(sx, sy - 6);
+      c.lineTo(sx, sy + 6);
+      c.stroke();
+    }
+    c.restore();
+  }
+
+    /** Pedang Api: bilah menyala, lidah api bergoyang, percikan, pelindung perunggu bermata ungu. */
+  private fireBlade(x: number, y: number, a: number, len: number) {
+    const c = this.ctx;
+    const dx = Math.cos(a), dy = Math.sin(a);
+    const nx = -dy, ny = dx;
+    const P = (u: number, v: number): [number, number] => [x + dx * u + nx * v, y + dy * u + ny * v];
+    const T = this.time;
+    const L = len;
+    const poly = (pts: [number, number][], fill: string, stroke?: string, lw = 3) => {
+      c.beginPath();
+      pts.forEach(([u, v], i) => (i ? c.lineTo(...P(u, v)) : c.moveTo(...P(u, v))));
+      c.closePath();
+      c.fillStyle = fill;
+      c.fill();
+      if (stroke) {
+        c.strokeStyle = stroke;
+        c.lineWidth = lw;
+        c.stroke();
+      }
+    };
+    // satu lidah api: pangkal di tepi bilah, ujung meliuk ke arah ujung pedang
+    const lick = (u: number, side: number, h: number, lean: number, ph: number, fill: string, stroke?: string) => {
+      const sw = Math.sin(ph) * 5; // goyangan
+      const w = 7;
+      const tipU = u + lean + sw;
+      const tipV = side * (7 + h);
+      c.beginPath();
+      c.moveTo(...P(u - w, side * 7));
+      c.bezierCurveTo(...P(u - w, side * (7 + h * 0.6)), ...P(tipU - lean * 0.7, side * (7 + h * 0.85)), ...P(tipU, tipV));
+      c.bezierCurveTo(...P(u + lean * 0.9, side * (7 + h * 0.55)), ...P(u + w, side * (7 + h * 0.3)), ...P(u + w, side * 7));
+      c.closePath();
+      c.fillStyle = fill;
+      c.fill();
+      if (stroke) {
+        c.strokeStyle = stroke;
+        c.lineWidth = 2.5;
+        c.stroke();
+      }
+    };
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+
+    // gagang ungu tua berbalut + ujung perunggu
+    c.strokeStyle = INK;
+    c.lineWidth = 12;
+    c.beginPath();
+    c.moveTo(...P(-22, 0));
+    c.lineTo(...P(0, 0));
+    c.stroke();
+    c.strokeStyle = "#4a2a52";
+    c.lineWidth = 6.5;
+    c.stroke();
+    c.strokeStyle = "#8c5a9c";
+    c.lineWidth = 1.8;
+    for (const u of [-5, -10, -15]) {
+      c.beginPath();
+      c.moveTo(...P(u, -3));
+      c.lineTo(...P(u - 3, 3));
+      c.stroke();
+    }
+    poly([[-21, -6], [-21, 6], [-30, 6], [-30, -6]], "#b8802f", INK, 2.5);
+
+    // lidah api di belakang bilah: 5 per sisi, sisi atas (+) lebih besar
+    const N = 2;
+    for (const side of [1, -1]) {
+      for (let i = 0; i < N; i++) {
+        const u = 26 + ((L - 50) * i) / (N - 1);
+        const ph = T * 7 + i * 2.1 + (side > 0 ? 0 : 2.4);
+        const big = side > 0 ? 1 : 0.75;
+        const h = (12 + Math.sin(ph) * 3 + i * 3) * big; // makin ke ujung makin besar
+        const lean = 12 + i * 3 + Math.sin(ph * 0.7) * 3;
+        lick(u, side, h, lean, ph, "#ff6a1f", INK);
+        lick(u + 1, side, h * 0.6, lean * 0.7, ph, "#ffd23f");
+      }
+    }
+
+    // bilah inti
+    poly([[0, 7], [0.3 * L, 9], [0.75 * L, 7], [L + 6, 0], [0.75 * L, -7], [0.3 * L, -9], [0, -7]], "#ff8a1f", INK, 3.5);
+    poly([[4, 0], [0.3 * L, 5], [0.8 * L, 4], [L - 2, 0], [0.8 * L, -4], [0.3 * L, -5]], "#ffd23f");
+    c.strokeStyle = "#fff6c4";
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.moveTo(...P(6, 0));
+    c.lineTo(...P(L - 6, 0));
+    c.stroke();
+
+    // nyala besar di ujung bilah
+    const tp = T * 8;
+    const tipFlame = (hh: number, fill: string, stroke?: string) => {
+      c.beginPath();
+      c.moveTo(...P(L - 12, 8));
+      c.bezierCurveTo(...P(L, 12), ...P(L + hh * 0.5, 10 + Math.sin(tp) * 4), ...P(L + hh, Math.sin(tp + 1) * 10));
+      c.bezierCurveTo(...P(L + hh * 0.5, -6 + Math.sin(tp) * 3), ...P(L, -10), ...P(L - 12, -8));
+      c.closePath();
+      c.globalAlpha = 0.5; // setengah transparan supaya ujung bilah tetap terlihat
+      c.fillStyle = fill;
+      c.fill();
+      if (stroke) {
+        c.strokeStyle = stroke;
+        c.lineWidth = 3;
+        c.stroke();
+      }
+      c.globalAlpha = 1;
+    };
+    tipFlame(30 + Math.sin(tp * 1.3) * 4, "#ff6a1f", INK);
+    tipFlame(19 + Math.sin(tp * 1.3) * 3, "#ffd23f");
+
+    // pelindung perunggu bertanduk + permata ungu
+    for (const side of [1, -1]) {
+      poly([[3, side * 6], [-3, side * 13], [-12, side * 22], [-8, side * 27], [4, side * 21], [12, side * 15], [9, side * 6]], "#b8802f", INK, 3);
+      poly([[3, side * 6], [-3, side * 13], [4, side * 21]], "#7a4f1a");
+    }
+    poly([[-7, 0], [0, 8], [7, 0], [0, -8]], "#7a4f1a", INK, 2.5);
+    poly([[-3.5, 0], [0, 4.5], [3.5, 0], [0, -4.5]], "#d8b4ff");
+
+    // percikan api yang naik dan memudar
+    for (let k = 0; k < 5; k++) {
+      const ph = (T * 0.9 + k * 0.137) % 1;
+      const u = ((k * 0.37 + 0.1) % 1) * (L + 20);
+      const side = k % 2 ? 1 : -1;
+      const [ex, ey] = P(u + ph * 14, side * (16 + ph * 26));
+      c.globalAlpha = 1 - ph;
+      c.fillStyle = k % 3 ? "#ffb03a" : "#ffe14d";
+      c.beginPath();
+      c.moveTo(ex, ey - 3.5);
+      c.lineTo(ex + 2.5, ey);
+      c.lineTo(ex, ey + 3.5);
+      c.lineTo(ex - 2.5, ey);
+      c.closePath();
+      c.fill();
+    }
+    c.globalAlpha = 1;
+    c.restore();
+  }
+
+    /** Pedang Raja: bilah emas lebar, rune menyala bergiliran, pelindung bulan sabit, medali di tengah. */
+  private royalBlade(x: number, y: number, a: number, len: number) {
+    const c = this.ctx;
+    const dx = Math.cos(a), dy = Math.sin(a);
+    const nx = -dy, ny = dx;
+    const P = (u: number, v: number): [number, number] => [x + dx * u + nx * v, y + dy * u + ny * v];
+    const T = this.time;
+    const L = len;
+    const poly = (pts: [number, number][], fill: string, stroke?: string, lw = 3) => {
+      c.beginPath();
+      pts.forEach(([u, v], i) => (i ? c.lineTo(...P(u, v)) : c.moveTo(...P(u, v))));
+      c.closePath();
+      c.fillStyle = fill;
+      c.fill();
+      if (stroke) {
+        c.strokeStyle = stroke;
+        c.lineWidth = lw;
+        c.stroke();
+      }
+    };
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+
+    // gagang abu-abu dengan cincin emas
+    c.strokeStyle = INK;
+    c.lineWidth = 12;
+    c.beginPath();
+    c.moveTo(...P(-26, 0));
+    c.lineTo(...P(0, 0));
+    c.stroke();
+    c.strokeStyle = "#7d8794";
+    c.lineWidth = 6.5;
+    c.stroke();
+    c.strokeStyle = "#e8b81c";
+    c.lineWidth = 3;
+    for (const u of [-9, -20]) {
+      c.beginPath();
+      c.moveTo(...P(u, -4));
+      c.lineTo(...P(u, 4));
+      c.stroke();
+    }
+    // ujung gagang: berlian emas
+    poly([[-25, 0], [-32, -7], [-40, 0], [-32, 7]], "#ffd23f", INK, 3);
+    poly([[-29, 0], [-32, -3], [-35, 0], [-32, 3]], "#c1272d");
+
+    // bilah emas lebar, dua belahan (terang & gelap)
+    const edge = (v: number): [number, number][] => [[8, v * 9], [0.25 * L, v * 12], [0.88 * L, v * 11]];
+    const tip: [number, number] = [L + 12, 0];
+    poly([[8, 0], ...edge(1), tip], "#ffe58a");
+    poly([[8, 0], ...edge(-1), tip], "#e8a826");
+    c.strokeStyle = INK;
+    c.lineWidth = 3.5;
+    c.beginPath();
+    [...edge(1), tip, ...edge(-1).reverse()].forEach(([u, v], i) => (i ? c.lineTo(...P(u, v)) : c.moveTo(...P(u, v))));
+    c.closePath();
+    c.stroke();
+
+    // alur rune menyala
+    const s0 = 0.16 * L, s1 = 0.9 * L;
+    poly([[s0, 0], [s0 + 6, 5], [s1, 5], [s1 + 6, 0], [s1, -5], [s0 + 6, -5]], "#ff9a2e", INK, 2.5);
+    poly([[s0 + 6, 0], [s0 + 10, 2.5], [s1 - 2, 2.5], [s1 + 1, 0], [s1 - 2, -2.5], [s0 + 10, -2.5]], "#ffd86b");
+    // rune: tanda kecil yang menyala bergiliran dari pangkal ke ujung
+    const n = Math.floor((s1 - s0 - 14) / 9);
+    for (let i = 0; i < n; i++) {
+      const u = s0 + 14 + i * 9;
+      const glow = 0.45 + 0.55 * Math.max(0, Math.sin(T * 4 - i * 0.7));
+      c.globalAlpha = glow;
+      c.strokeStyle = i % 2 ? "#fff6c4" : "#c1480a";
+      c.lineWidth = 1.8;
+      c.beginPath();
+      c.moveTo(...P(u, -2));
+      c.lineTo(...P(u, 2));
+      if (i % 3 === 0) {
+        c.moveTo(...P(u - 2, 0));
+        c.lineTo(...P(u + 2, 0));
+      } else if (i % 3 === 1) {
+        c.moveTo(...P(u - 2, 2));
+        c.lineTo(...P(u + 2, -2));
+      }
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+
+    // kilau memanjang yang bergerak menyusuri bilah
+    const g = ((T * 0.5) % 1.5) * L - 0.2 * L;
+    if (g > 8 && g < L - 4) {
+      c.strokeStyle = "#fff";
+      c.lineWidth = 3;
+      c.globalAlpha = 0.85;
+      c.beginPath();
+      c.moveTo(...P(g - 4, -11));
+      c.lineTo(...P(g + 4, -6));
+      c.stroke();
+      c.globalAlpha = 1;
+    }
+
+    // pelindung: dua tanduk bulan sabit melengkung ke arah gagang
+    for (const side of [1, -1]) {
+      c.beginPath();
+      c.moveTo(...P(6, side * 6));
+      c.bezierCurveTo(...P(10, side * 24), ...P(0, side * 33), ...P(-20, side * 36)); // sisi luar
+      c.bezierCurveTo(...P(-2, side * 22), ...P(8, side * 17), ...P(16, side * 9)); // sisi dalam (jauh dari sisi luar = tebal)
+      c.closePath();
+      c.fillStyle = "#ffd23f";
+      c.fill();
+      c.strokeStyle = INK;
+      c.lineWidth = 3;
+      c.stroke();
+      // tanduk kecil di bawahnya
+      poly([[8, side * 7], [2, side * 17], [14, side * 14]], "#e8b81c", INK, 2.5);
+    }
+    // medali bundar dengan rune bercahaya
+    c.beginPath();
+    c.arc(...P(2, 0), 8.5, 0, 6.283);
+    c.fillStyle = "#e8b81c";
+    c.fill();
+    c.strokeStyle = INK;
+    c.lineWidth = 3;
+    c.stroke();
+    const pulse = 0.7 + 0.3 * Math.sin(T * 4);
+    c.globalAlpha = pulse;
+    poly([[-2, 0], [2, 4], [6, 0], [2, -4]], "#fff6c4");
+    c.globalAlpha = 1;
+
+    // kilau emas kecil di sekitar pedang
+    for (let k = 0; k < 4; k++) {
+      const ph = (T * 0.7 + k * 0.25) % 1;
+      const [sx, sy] = P(((k * 0.41 + 0.15) % 1) * L, (k % 2 ? 1 : -1) * (16 + ph * 12));
+      c.globalAlpha = Math.sin(ph * Math.PI);
+      c.strokeStyle = "#fff6c4";
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(sx - 3.5, sy);
+      c.lineTo(sx + 3.5, sy);
+      c.moveTo(sx, sy - 3.5);
+      c.lineTo(sx, sy + 3.5);
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+    c.restore();
+  }
+
+  /** Siluet di kedua sisi bilah: api menjilat, kristal es, kilau emas. */
+  private bladeFx(x: number, y: number, dx: number, dy: number, nx: number, ny: number, len: number, sw: Sword) {
+    if (sw.fx === "none") return;
+    const c = this.ctx;
+    const T = this.time;
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+    // u = jarak sepanjang bilah, v = jarak ke samping (+/-)
+    const P = (u: number, v: number): [number, number] => [x + dx * u + nx * v, y + dy * u + ny * v];
+    const N = 5; // jumlah hiasan per sisi
+    for (const side of [1, -1]) {
+      for (let i = 0; i < N; i++) {
+        const u = 14 + ((len - 22) * i) / (N - 1); // sebar rata dari pangkal ke ujung
+        const ph = T * 11 + i * 1.7 + (side > 0 ? 0 : 2.3); // fase beda tiap hiasan
+        if (sw.fx === "fire") {
+          const h = 15 + Math.sin(ph) * 5;          // tinggi lidah api (berkedip)
+          const lean = 7 + Math.sin(ph * 0.8) * 3;  // condong ke arah ujung bilah
+          const [x0, y0] = P(u - 6, side * 5);
+          const [x1, y1] = P(u + 6, side * 5);
+          const [tx, ty] = P(u + lean, side * (5 + h));
+          const [cx, cy] = P(u - 5, side * (5 + h * 0.55));
+          c.beginPath();
+          c.moveTo(x0, y0);
+          c.quadraticCurveTo(cx, cy, tx, ty);
+          c.quadraticCurveTo(...P(u + 7, side * (5 + h * 0.4)), x1, y1);
+          c.closePath();
+          c.fillStyle = "#ff6a1f";
+          c.strokeStyle = INK;
+          c.lineWidth = 2.5;
+          c.fill();
+          c.stroke();
+          // inti api kuning
+          const [ix, iy] = P(u + lean * 0.6, side * (5 + h * 0.62));
+          const [ax, ay] = P(u - 3, side * 5);
+          const [bx, by] = P(u + 4, side * 5);
+          c.beginPath();
+          c.moveTo(ax, ay);
+          c.lineTo(ix, iy);
+          c.lineTo(bx, by);
+          c.closePath();
+          c.fillStyle = "#ffe14d";
+          c.fill();
+        } else if (sw.fx === "ice") {
+          const h = i % 2 ? 11 : 16; // kristal selang-seling panjang & pendek
+          const [x0, y0] = P(u - 5, side * 5);
+          const [x1, y1] = P(u + 5, side * 5);
+          const [tx, ty] = P(u + 3, side * (5 + h));
+          c.beginPath();
+          c.moveTo(x0, y0);
+          c.lineTo(tx, ty);
+          c.lineTo(x1, y1);
+          c.closePath();
+          c.fillStyle = "#d9f6ff";
+          c.strokeStyle = INK;
+          c.lineWidth = 2.5;
+          c.fill();
+          c.stroke();
+          // sisi gelap kristal (kesan berfaset)
+          c.beginPath();
+          c.moveTo(x0, y0);
+          c.lineTo(tx, ty);
+          c.lineTo(...P(u, side * 5));
+          c.closePath();
+          c.fillStyle = "#7fd3f2";
+          c.fill();
+        } else {
+          // royal: segitiga emas + kilau yang berkedip
+          const h = 9;
+          const [x0, y0] = P(u - 4, side * 5);
+          const [x1, y1] = P(u + 4, side * 5);
+          const [tx, ty] = P(u, side * (5 + h));
+          c.beginPath();
+          c.moveTo(x0, y0);
+          c.lineTo(tx, ty);
+          c.lineTo(x1, y1);
+          c.closePath();
+          c.fillStyle = "#ffd23f";
+          c.strokeStyle = INK;
+          c.lineWidth = 2.5;
+          c.fill();
+          c.stroke();
+          if (Math.sin(ph * 0.6) > 0.6) {
+            const [sx, sy] = P(u, side * (5 + h + 7));
+            c.strokeStyle = "#fff";
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(sx - 4, sy);
+            c.lineTo(sx + 4, sy);
+            c.moveTo(sx, sy - 4);
+            c.lineTo(sx, sy + 4);
+            c.stroke();
+          }
+        }
+      }
+    }
+    c.restore();
+  }
 }

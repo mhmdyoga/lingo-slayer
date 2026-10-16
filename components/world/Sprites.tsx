@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Knight, KnightPart, Rock, PineTree, type KnightPartName } from "../Scenery";
+import {
+  Knight,
+  KnightPart,
+  Rock,
+  PineTree,
+  type KnightPartName,
+} from "../Scenery";
 import type { Sprites } from "./engine";
 import { MONSTER_IDS } from "@/lib/bestiary";
+import { SKIN } from "@/lib/shop";
 
 function loadPng(src: string) {
   return new Promise<HTMLImageElement>((res, rej) => {
@@ -18,7 +25,10 @@ function loadPng(src: string) {
  * Merender SVG doodle ke DOM tersembunyi, lalu mengubahnya jadi gambar
  * yang bisa digambar cepat di canvas.
  */
-export function useSprites(): { host: React.ReactNode; sprites: Sprites | null } {
+export function useSprites(): {
+  host: React.ReactNode;
+  sprites: Sprites | null;
+} {
   const ref = useRef<HTMLDivElement>(null);
   const [sprites, setSprites] = useState<Sprites | null>(null);
 
@@ -26,7 +36,9 @@ export function useSprites(): { host: React.ReactNode; sprites: Sprites | null }
     const host = ref.current;
     if (!host) return;
     let cancelled = false;
-    const nodes = Array.from(host.querySelectorAll<HTMLElement>("[data-sprite]"));
+    const nodes = Array.from(
+      host.querySelectorAll<HTMLElement>("[data-sprite]"),
+    );
     const ser = new XMLSerializer();
     Promise.all(
       nodes.map(
@@ -34,9 +46,16 @@ export function useSprites(): { host: React.ReactNode; sprites: Sprites | null }
           new Promise<[string, HTMLImageElement]>((resolve, reject) => {
             const svg = n.firstElementChild as SVGSVGElement;
             const clone = svg.cloneNode(true) as SVGSVGElement;
-            const vb = (clone.getAttribute("viewBox") ?? "0 0 100 100").split(/\s+/).map(Number);
+            const vb = (clone.getAttribute("viewBox") ?? "0 0 100 100")
+              .split(/\s+/)
+              .map(Number);
             const pad = 10;
-            const [x, y, w, h] = [vb[0] - pad, vb[1] - pad, vb[2] + pad * 2, vb[3] + pad * 2];
+            const [x, y, w, h] = [
+              vb[0] - pad,
+              vb[1] - pad,
+              vb[2] + pad * 2,
+              vb[3] + pad * 2,
+            ];
             clone.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
             clone.setAttribute("width", String(w * 3));
             clone.setAttribute("height", String(h * 3));
@@ -45,13 +64,21 @@ export function useSprites(): { host: React.ReactNode; sprites: Sprites | null }
             const img = new Image();
             img.onload = () => resolve([n.dataset.sprite!, img]);
             img.onerror = () => reject(new Error(`sprite ${n.dataset.sprite}`));
-            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(ser.serializeToString(clone));
+            img.src =
+              "data:image/svg+xml;charset=utf-8," +
+              encodeURIComponent(ser.serializeToString(clone));
           }),
       ),
     ).then(async (pairs) => {
       const png = await Promise.all(
         MONSTER_IDS.flatMap((id) =>
-          (["idle", "hurt", "dead"] as const).map(async (st) => [`m-${id}-${st}`, await loadPng(`/monsters/${id}-${st}.png`)] as [string, HTMLImageElement]),
+          (["idle", "hurt", "dead"] as const).map(
+            async (st) =>
+              [`m-${id}-${st}`, await loadPng(`/monsters/${id}-${st}.png`)] as [
+                string,
+                HTMLImageElement,
+              ],
+          ),
         ),
       );
       if (!cancelled) setSprites(Object.fromEntries([...pairs, ...png]));
@@ -62,7 +89,17 @@ export function useSprites(): { host: React.ReactNode; sprites: Sprites | null }
   }, []);
 
   const host = (
-    <div ref={ref} style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", visibility: "hidden" }} aria-hidden>
+    <div
+      ref={ref}
+      style={{
+        position: "absolute",
+        width: 0,
+        height: 0,
+        overflow: "hidden",
+        visibility: "hidden",
+      }}
+      aria-hidden
+    >
       <div data-sprite="tree">
         <PineTree />
       </div>
@@ -72,11 +109,15 @@ export function useSprites(): { host: React.ReactNode; sprites: Sprites | null }
       <div data-sprite="knight">
         <Knight />
       </div>
-      {(["legL", "legR", "body", "armL", "armR"] as KnightPartName[]).map((n) => (
-        <div key={n} data-sprite={`k-${n}`}>
-          <KnightPart part={n} />
-        </div>
-      ))}
+      {SKIN.flatMap((sk) =>
+        (["legL", "legR", "body", "armL", "armR"] as KnightPartName[]).map(
+          (n) => (
+            <div key={`${n}-${sk.id}`} data-sprite={`k-${n}-${sk.id}`}>
+              <KnightPart part={n} pal={sk.pal} />
+            </div>
+          ),
+        ),
+      )}
     </div>
   );
   return { host, sprites };

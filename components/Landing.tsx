@@ -91,19 +91,6 @@ export default function Landing() {
         delay: 0.3,
       });
 
-      // kata yang berganti
-      if (!reduce) {
-        const words = gsap.utils.toArray<HTMLElement>(".swap-word");
-        gsap.set(words, { yPercent: 110 });
-        const tl = gsap.timeline({ repeat: -1, delay: 1.2 });
-        words.forEach((w) => {
-          tl.to(w, { yPercent: 0, duration: 0.6, ease: "back.out(1.7)" })
-            .to(w, { yPercent: -110, duration: 0.45, ease: "power2.in" }, "+=1.5");
-        });
-      } else {
-        gsap.set(".swap-word:not(:first-child)", { display: "none" });
-      }
-
       // reveal saat scroll
       gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el, i) => {
         gsap.from(el, {

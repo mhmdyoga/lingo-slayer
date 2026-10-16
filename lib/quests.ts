@@ -10,6 +10,7 @@ import {
 } from "./questions";
 
 import { BESTIARY, type MKind } from "./bestiary";
+import { isWeak, loadBook } from "./wordsbook";
 export type MonsterKindName = MKind;
 
 function tier(playerLevel: number): LevelId {
@@ -72,7 +73,10 @@ export function createQuestGenerator() {
       VOCAB.forEach((v) => used.delete(`${prefix}-${v.en}`));
       pool = VOCAB.filter(fits);
     }
-    const item = pick(pool);
+    const book = loadBook()
+    const weak = VOCAB.filter((v) => fits(v) && isWeak(book[v.en]))
+    // jadi ketika yang salah itu lebih dari 0 maka peluang kata yang akan muncul 40% dari kata yang lemah/salah ( ini akan menampilkan ulang kata yang sama dan lemah dengan kesempatan tampilnya 40%)
+    const item = weak.length > 0 && Math.random() < 0.4 ? pick(weak) : pick(pool);
     used.add(`${prefix}-${item.en}`);
     return buildQuestion(kind, item, VOCAB, level);
   };
