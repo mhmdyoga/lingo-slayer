@@ -556,9 +556,11 @@ export class Engine {
         m.ky *= 0.6;
         this.stats.kills++;
         this.addXp(d.xp);
-        const coins = coinDrop(!!d.boss)
-        this.cb.onCoin?.(coins)
-         this.texts.push({ x: m.x, y: m.y - d.w * 1.3, text: `+${coins} 🪙`, life: 1.1, color: "#b8860b" });
+
+        // const coins = coinDrop(!!d.boss)
+        // this.cb.onCoin?.(coins)
+        //  this.texts.push({ x: m.x, y: m.y - d.w * 1.3, text: `+${coins} 🪙`, life: 1.1, color: "#b8860b" });
+
         this.burst(m.x, m.y - 30, 14, "puff", d.color);
         if (!this.muted) play("kill");
       } else if (!this.muted) play("hit");
@@ -612,15 +614,25 @@ export class Engine {
   /** Hadiah / hukuman setelah quest dijawab. */
   reward(correct: boolean, kind: MKind) {
     const s = this.stats;
+    const d = MDEF[kind]
     if (correct) {
       s.streak++;
-      const gain = 20 + Math.min(s.streak - 1, 5) * 5 + (MDEF[kind].boss ? 30 : 0);
+      // gain exp
+      const gain = 20 + Math.min(s.streak - 1, 5) * 5 + (d.boss ? 30 : 0);
       s.score += gain * 10;
       this.texts.push({ x: this.p.x, y: this.p.y - 120, text: `+${gain} XP`, life: 1.4, color: "#1a9d4f" });
+
+      // gain coin
+        const coins = coinDrop(!!d.boss);
+        this.cb.onCoin?.(coins);
+        this.texts.push({ x: this.p.x, y: this.p.y - d.w * 1.3, text: `+${coins} 🪙`, life: 1.1, color: "#b8860b" });
+      
+      
       if (s.streak % 3 === 0 && s.hp < s.maxHp) {
         s.hp++;
         this.texts.push({ x: this.p.x + 30, y: this.p.y - 150, text: "+♥", life: 1.4, color: "#ff4d4d" });
       }
+
       this.addXp(gain);
       if (!this.muted) play("correct");
     } else {

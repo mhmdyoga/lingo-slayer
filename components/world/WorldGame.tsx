@@ -381,10 +381,12 @@ export default function WorldGame() {
         )}
       </AnimatePresence>
 
-      {/* quest */}
+      {/* Book Collection */}
       <AnimatePresence>
         {bookOpen && <WordBookModal onClose={() => setBookOpen(false)} />}
       </AnimatePresence>
+
+      {/* Quest */}
       <AnimatePresence>
         {phase === "quest" && questState && (
           <QuestPanel
@@ -545,6 +547,8 @@ export default function WorldGame() {
           </motion.div>
         )}
       </AnimatePresence>
+
+       {/* Store */}
       <AnimatePresence>
         {storeOpen && (
           <Store
@@ -558,6 +562,7 @@ export default function WorldGame() {
   );
 }
 
+// MOBILE CONTROLS
 function TouchControls({ engine }: { engine: React.RefObject<Engine | null> }) {
   const base = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
