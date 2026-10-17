@@ -23,16 +23,16 @@ export const SKIN: Skin[] = [
     name: "Zirah Naga Api ( Exclusive )",
     price: 60,
     pal: {
-      light: "#c2272c",
-      mid: "#2c2e36",
-      body: "#4a4d59",
-      dark: "#24262d",
-      plume: "#ff5a1f",
-      plume2: "#ffd23f",
-      helm: "#c1272d",
-      shoulder: "#c1272d",
-      trim: "#e8b81c",
       deco: "dragon",
+      body: "#2d2f36",
+      mid: "#383b43",
+      dark: "#25272d",
+      light: "#c2272c", // sepatu, kepalan, garis visor
+      trim: "#f0b030", // tanduk, kepala naga, ikat pinggang (emas)
+      shoulder: "#d4481c",
+      helm: "#aab0bb", // helm perak
+      plume: "#ff5a1f", // api luar
+      plume2: "#ffc83a", // api dalam
     },
   },
   {
@@ -65,23 +65,23 @@ export const SKIN: Skin[] = [
       plume2: "#d9f56a",
     },
   },
- {
-  id: "royal",
-  name: "Zirah Kerajaan",
-  price: 124,
-  pal: {
-    deco: "royal",
-    body: "#2c2e35",     // baju hitam
-    mid: "#3a3d46",      // lengan & leher
-    dark: "#1f2127",     // kaki
-    light: "#f2b824",    // sepatu & aksen emas
-    trim: "#d9a11a",     // ikat pinggang
-    shoulder: "#f2b824",
-    helm: "#3a3d46",     // helm hitam keabuan
-    plume: "#f2b824",
-    plume2: "#ffe58a",
+  {
+    id: "royal",
+    name: "Zirah Kerajaan",
+    price: 124,
+    pal: {
+      deco: "royal",
+      body: "#2c2e35", // baju hitam
+      mid: "#3a3d46", // lengan & leher
+      dark: "#1f2127", // kaki
+      light: "#f2b824", // sepatu & aksen emas
+      trim: "#d9a11a", // ikat pinggang
+      shoulder: "#f2b824",
+      helm: "#3a3d46", // helm hitam keabuan
+      plume: "#f2b824",
+      plume2: "#ffe58a",
+    },
   },
-}
 ];
 
 export const SWORDS: Sword[] = [

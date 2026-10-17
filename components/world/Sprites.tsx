@@ -21,6 +21,8 @@ function loadPng(src: string) {
   });
 }
 
+export const KPAD = 60;
+
 /**
  * Merender SVG doodle ke DOM tersembunyi, lalu mengubahnya jadi gambar
  * yang bisa digambar cepat di canvas.
@@ -49,7 +51,7 @@ export function useSprites(): {
             const vb = (clone.getAttribute("viewBox") ?? "0 0 100 100")
               .split(/\s+/)
               .map(Number);
-            const pad = 10;
+            const pad = n.dataset.sprite?.startsWith("k-") ? KPAD : 10;
             const [x, y, w, h] = [
               vb[0] - pad,
               vb[1] - pad,

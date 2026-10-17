@@ -4,6 +4,7 @@ import { play } from "@/lib/sfx";
 import { BESTIARY, type MKind } from "@/lib/bestiary";
 import { coinDrop, getSword } from "@/lib/shop";
 import { Sword } from "@/types/knight/knight";
+import { KPAD } from "./Sprites";
 export type { MKind };
 export type Stats = {
   hp: number;
@@ -1067,7 +1068,7 @@ export class Engine {
       c.translate(px, py + oy);
       c.rotate(ang);
       c.translate(-px, -py);
-      c.drawImage(S[`${name}-${sk}`], -10, -10, 140, 210);
+      c.drawImage(S[`${name}-${sk}`], -KPAD, -KPAD, 240, 310);
       c.restore();
     };
 
@@ -1082,7 +1083,7 @@ export class Engine {
     c.rotate(lean);
     c.scale(1, squashY);
     c.translate(-60, -126 + bob);
-    c.drawImage(S[`k-body-${this.look.skin}`], -10, -10, 140, 210);
+    c.drawImage(S[`k-body-${this.look.skin}`], -KPAD, -KPAD, 240, 310);
 
     const armL = -sn * 0.55 * moving + idle * 0.05 * (1 - moving) + (t >= 0 ? -0.6 * wind + 0.9 * strike : 0);
     put("k-armL", 28, 86, armL);
@@ -1093,7 +1094,7 @@ export class Engine {
     c.translate(92, 86);
     c.rotate(armR);
     c.translate(-92, -86);
-    c.drawImage(S[`k-armR-${this.look.skin}`], -10, -10, 140, 210);
+    c.drawImage(S[`k-armR-${this.look.skin}`], -KPAD, -KPAD, 240, 310);
     if (t < 0) {
       // pedang tergenggam di tangan kanan saat tidak menyerang
       c.translate(98, 132);
